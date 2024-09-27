@@ -18,11 +18,17 @@ bool running = true;
 typedef struct{
   int x, y;
   bool active;
-} block;
+} block_t;
+
+typedef struct{
+  int direction;
+  block_t body[MAX_SNAKE_SIZE];
+  int size;
+} snake_t;
 
 // snake and apple
-block snake[MAX_SNAKE_SIZE];
-block apple;
+block_t apple;
+snake_t snake;
 
 void init(){
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -48,6 +54,24 @@ void init(){
     apple.active = true;
     apple.x = rand() % MAP_W;
     apple.y = rand() % MAP_H;
+
+    //init snake
+    {
+      int i = 0;
+      snake.direction = LEFT;
+      snake.size = INITIAL_SNAKE_SIZE;
+      for( ; i < INITIAL_SNAKE_SIZE ; i++){
+        snake.body[i].active = true;
+        snake.body[i].x = MAP_W / 2 - i;
+        snake.body[i].y = MAP_H / 2;
+      }
+
+      for( ; i < MAX_SNAKE_SIZE ; i++){
+        snake.body[i].active = false;
+        snake.body[i].x = -1;
+        snake.body[i].y = -1;
+      }
+    }
 }
 
 void keydown(SDL_Event e){
@@ -119,25 +143,19 @@ void render(){
     renderRect.h = GRID_SIZE;
     SDL_RenderFillRect(r, &renderRect);
 
-    // RENDER PLAYER
-    // SDL_Rect playerRect = {(int)p.x, (int)p.y, (int)p.sizeX, (int)p.sizeY};
-    // SDL_RenderCopy(r, playerTexture, NULL, &playerRect);
+    // RENDER SNAKE
 
-    // RENDER UI
+    {
+      int i = 0;
 
-    //SDL_SetRenderDrawColor(renderer, 130, 130, 130, 255);
-    //SDL_Rect uiBg = {0,0,WIDTH,UI_HEIGHT};
-    //SDL_RenderFillRect(renderer, &uiBg);
-
-    //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    //for(int i = 0 ; i < lifes ; i++){
-    //    SDL_Rect lifeRect = {30 + (40+5)*i, 30, 40, 40};
-    //    SDL_RenderFillRect(renderer, &lifeRect);
-    //}
-    //
-    //char buf[20];
-    //sprintf(buf, "%ld", score);
-    //fontTexture(mainFont, buf, WIDTH/2 + WIDTH/4, 30);
+      while(snake.body[i].active){
+        SDL_SetRenderDrawColor(r, 0, 255 - ((200/snake.size) * i), 0,255);
+        renderRect.x = snake.body[i].x * GRID_SIZE;
+        renderRect.y = snake.body[i].y * GRID_SIZE;
+        SDL_RenderFillRect(r, &renderRect);
+        i++;
+      }
+    }
 
     SDL_RenderPresent(r);
 }

@@ -12,7 +12,11 @@
 #define MAP_SNAKE 1
 #define MAP_APPLE 2
 
-#define INITIAL_SNAKE_SIZE 3
+#define INITIAL_SNAKE_SIZE 11
 #define MAX_SNAKE_SIZE MAP_W*MAP_H
+#define UP 0
+#define RIGHT 1
+#define DOWN 2
+#define LEFT 3
 
 #endif
