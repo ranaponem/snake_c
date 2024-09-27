@@ -1,5 +1,6 @@
 #include "constants.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <stdint.h>
@@ -8,7 +9,7 @@
 #include <time.h>
 
 // variable init
-int tick_time = 3000;
+float tick_time = 1.2;
 uint32_t last_time = 0;
 SDL_Window* w;
 SDL_Renderer* r;
@@ -62,7 +63,7 @@ void init(){
       snake.size = INITIAL_SNAKE_SIZE;
       for( ; i < INITIAL_SNAKE_SIZE ; i++){
         snake.body[i].active = true;
-        snake.body[i].x = MAP_W / 2 - i;
+        snake.body[i].x = MAP_W / 2 + i;
         snake.body[i].y = MAP_H / 2;
       }
 
@@ -87,6 +88,19 @@ void keyup(SDL_Event e){
     switch(e.key.keysym.sym){
         case SDLK_UP:
         case SDLK_w:
+            if(snake.direction != DOWN) snake.direction = UP;
+            break;
+        case SDLK_RIGHT:
+        case SDLK_d:
+            if(snake.direction != LEFT) snake.direction = RIGHT;
+            break;
+        case SDLK_DOWN:
+        case SDLK_s:
+            if(snake.direction != UP) snake.direction = DOWN;
+            break;
+        case SDLK_LEFT:
+        case SDLK_a:
+            if(snake.direction != RIGHT) snake.direction = LEFT;
             break;
     }
 }
@@ -113,11 +127,48 @@ void process_input(){
     }
 }
 
+void moveSnake(){
+  block_t temp1, temp2;
+
+  temp1.x = snake.body[0].x;
+  temp1.y = snake.body[0].y;
+
+  switch(snake.direction){
+    case UP:
+      snake.body[0].y--;
+      break;
+    case DOWN:
+      snake.body[0].y++;
+      break;
+    case LEFT:
+      snake.body[0].x--;
+      break;
+    case RIGHT:
+      snake.body[0].x++;
+      break;
+  }
+
+  for(int i = 1 ; i < snake.size ; i++){
+    temp2.x = snake.body[i].x;
+    temp2.y = snake.body[i].y;
+    snake.body[i].x = temp1.x;
+    snake.body[i].y = temp1.y;
+    temp1.x = temp2.x;
+    temp1.y = temp2.y;
+  }
+}
 
 void update(){
     uint32_t now = SDL_GetTicks();
     float deltaT = (now - last_time) / 1000.0f;
-    last_time = now;
+
+    if(deltaT >= tick_time){
+      last_time = now;
+
+      // MOVE SNAKE
+
+      moveSnake();
+    }
 }
 
 void render(){
