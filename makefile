@@ -1,5 +1,5 @@
 PROG=snake
-FILES=main.c
+FILES=main.c snake.c
 FLAGS=-Wall -Wextra -pedantic -lSDL2
 
 build:
