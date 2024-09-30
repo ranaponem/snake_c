@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "snake.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_render.h>
 #include <stdio.h>
 #include <time.h>
@@ -14,6 +15,7 @@ SDL_Renderer* r;
 uint8_t map[MAP_W][MAP_H] = {MAP_EMPTY};
 bool running = true;
 int curClickedDirection = LEFT;
+int curGameState = GAME_MENU;
 
 void init(){
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -39,16 +41,40 @@ void init(){
     newApple();
 }
 
+void pressedSpace(){
+  switch (curGameState) {
+    case GAME_MENU:
+      curGameState = GAME_PLAYING;
+      break;
+    case GAME_OVER:
+      running = false;
+      break;
+    case GAME_PLAYING:
+      curGameState = GAME_PAUSED;
+      break;
+    case GAME_PAUSED:
+      curGameState = GAME_PLAYING;
+      break;
+    case GAME_WON:
+      running = false;
+      break;
+  }
+}
+
 void keydown(SDL_Event e){
     switch(e.key.keysym.sym){
         case SDLK_ESCAPE:
             tick_time = 0; 
             running = false;
             break;
+        case SDLK_SPACE:
+            pressedSpace();
+            break;
     }
 }
 
 void keyup(SDL_Event e){
+  if(curGameState == GAME_PLAYING){
     switch(e.key.keysym.sym){
         case SDLK_UP:
         case SDLK_w:
@@ -67,6 +93,7 @@ void keyup(SDL_Event e){
             curClickedDirection = LEFT;
             break;
     }
+  }
 }
 
 void process_input(){
@@ -92,6 +119,7 @@ void process_input(){
 }
 
 void update(){
+  if(curGameState == GAME_PLAYING){
     uint32_t now = SDL_GetTicks();
     float deltaT = (now - last_time) / 1000.0f;
 
@@ -129,61 +157,84 @@ void update(){
       // CHECK FOR GAMEOVER
 
       if(isSnakeOOB() || isSnakeCollided()){
-        running = false;
+        curGameState = GAME_OVER;
       }
 
       // CHECK FOR WIN
 
       if(snake.size == MAX_SNAKE_SIZE){
-        running = false;
+        curGameState = GAME_WON;
       }
     }
+  }
+}
+
+void renderGameMenu(){
+  // TODO: 
+}
+
+void renderGamePlaying(){
+  
+  SDL_Rect renderRect;
+  renderRect.h = GRID_SIZE; renderRect.w = GRID_SIZE;
+
+  // RENDER GRID
+
+  int curColor;
+
+  for(int y = 0 ; y < MAP_H ; y++){
+    curColor = y % 2;
+
+    for(int x = 0 ; x < MAP_W ; x++){
+      if(curColor == 0){
+        SDL_SetRenderDrawColor(r, BKG_COLOR_1);
+        curColor = 1;
+      }
+      else{
+        SDL_SetRenderDrawColor(r, BKG_COLOR_2);
+        curColor = 0;
+      }
+
+      renderRect.x = x * GRID_SIZE;
+      renderRect.y = y * GRID_SIZE;
+
+      SDL_RenderFillRect(r, &renderRect);
+    }
+  }
+
+  // RENDER APPLE
+  // TODO: MAKE APPLE LOAD ITS SPRITE
+  
+  SDL_SetRenderDrawColor(r, 255, 0, 0, 255);
+  renderRect.x = apple.x * GRID_SIZE;
+  renderRect.y = apple.y * GRID_SIZE;
+  SDL_RenderFillRect(r, &renderRect);
+
+  // RENDER SNAKE
+  // TODO: MAKE SNAKE SEGMENTS LOAD SPRITES
+
+  for(int i = 0 ; i < snake.size ; i++){
+    SDL_SetRenderDrawColor(r, 0, 0, 255,255);
+    renderRect.x = snake.body[i].x * GRID_SIZE;
+    renderRect.y = snake.body[i].y * GRID_SIZE;
+    SDL_RenderFillRect(r, &renderRect);
+  }
 }
 
 void render(){
     SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
     SDL_RenderClear(r);
-    SDL_Rect renderRect;
-    renderRect.h = GRID_SIZE; renderRect.w = GRID_SIZE;
 
-    // RENDER GRID
-
-    int curColor;
-
-    for(int y = 0 ; y < MAP_H ; y++){
-      curColor = y % 2;
-
-      for(int x = 0 ; x < MAP_W ; x++){
-        if(curColor == 0){
-          SDL_SetRenderDrawColor(r, BKG_COLOR_1);
-          curColor = 1;
-        }
-        else{
-          SDL_SetRenderDrawColor(r, BKG_COLOR_2);
-          curColor = 0;
-        }
-
-        renderRect.x = x * GRID_SIZE;
-        renderRect.y = y * GRID_SIZE;
-
-        SDL_RenderFillRect(r, &renderRect);
-      }
-    }
-
-    // RENDER APPLE
-    
-    SDL_SetRenderDrawColor(r, 255, 0, 0, 255);
-    renderRect.x = apple.x * GRID_SIZE;
-    renderRect.y = apple.y * GRID_SIZE;
-    SDL_RenderFillRect(r, &renderRect);
-
-    // RENDER SNAKE
-
-    for(int i = 0 ; i < snake.size ; i++){
-      SDL_SetRenderDrawColor(r, 255 - ((200/snake.size) * i), 0, 0,255);
-      renderRect.x = snake.body[i].x * GRID_SIZE;
-      renderRect.y = snake.body[i].y * GRID_SIZE;
-      SDL_RenderFillRect(r, &renderRect);
+    switch(curGameState){
+      case GAME_MENU:
+        break;
+      case GAME_PLAYING:
+        renderGamePlaying();
+        break;
+      case GAME_OVER:
+        break;
+      case GAME_PAUSED:
+        break;
     }
 
     SDL_RenderPresent(r);

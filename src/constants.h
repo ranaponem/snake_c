@@ -20,6 +20,13 @@
 #define DOWN 2
 #define LEFT 3
 
+// GAME STATES
+#define GAME_MENU 0
+#define GAME_PLAYING 1
+#define GAME_OVER 2
+#define GAME_PAUSED 3
+#define GAME_WON 4
+
 // CELL STRUCT
 typedef struct{
   int x, y;
