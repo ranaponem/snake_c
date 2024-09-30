@@ -19,7 +19,6 @@ int curClickedDirection = LEFT;
 
 typedef struct{
   int x, y;
-  bool active;
 } block_t;
 
 typedef struct{
@@ -34,9 +33,8 @@ snake_t snake;
 
 bool isInsideSnake(block_t b, int start){
   int i = start;
-  while(snake.body[i].active == true){
+  for(i = start ; i < snake.size ; i++){
     if(b.x == snake.body[i].x && b.y == snake.body[i].y) return true;
-    i++;
   }
 
   return false;
@@ -70,26 +68,15 @@ void init(){
     srand(time(NULL));
 
     //init snake
-    {
-      int i = 0;
-      snake.direction = LEFT;
-      snake.size = INITIAL_SNAKE_SIZE;
-      for( ; i < INITIAL_SNAKE_SIZE ; i++){
-        snake.body[i].active = true;
-        snake.body[i].x = MAP_W / 2 + i;
-        snake.body[i].y = MAP_H / 2;
-      }
 
-      for( ; i < MAX_SNAKE_SIZE ; i++){
-        snake.body[i].active = false;
-        snake.body[i].x = -1;
-        snake.body[i].y = -1;
-      }
+    snake.direction = LEFT;
+    snake.size = INITIAL_SNAKE_SIZE;
+    for(int i = 0 ; i < snake.size ; i++){
+      snake.body[i].x = MAP_W / 2 + i;
+      snake.body[i].y = MAP_H / 2;
     }
 
-
     //init apple
-    apple.active = true;
     newApple();
 }
 
@@ -188,7 +175,6 @@ void sizeUpSnake(){
   int s = snake.size++;
   snake.body[s].x = snake.body[s-1].x;
   snake.body[s].y = snake.body[s-1].y;
-  snake.body[s].active = true;
 }
 
 bool isSnakeOOB(){
@@ -274,16 +260,11 @@ void render(){
 
     // RENDER SNAKE
 
-    {
-      int i = 0;
-
-      while(snake.body[i].active){
-        SDL_SetRenderDrawColor(r, 0, 255 - ((200/snake.size) * i), 0,255);
-        renderRect.x = snake.body[i].x * GRID_SIZE;
-        renderRect.y = snake.body[i].y * GRID_SIZE;
-        SDL_RenderFillRect(r, &renderRect);
-        i++;
-      }
+    for(int i = 0 ; i < snake.size ; i++){
+      SDL_SetRenderDrawColor(r, 0, 255 - ((200/snake.size) * i), 0,255);
+      renderRect.x = snake.body[i].x * GRID_SIZE;
+      renderRect.y = snake.body[i].y * GRID_SIZE;
+      SDL_RenderFillRect(r, &renderRect);
     }
 
     SDL_RenderPresent(r);
