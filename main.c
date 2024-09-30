@@ -9,12 +9,13 @@
 #include <time.h>
 
 // variable init
-float tick_time = 1.2;
+float tick_time = 0.3;
 uint32_t last_time = 0;
 SDL_Window* w;
 SDL_Renderer* r;
 uint8_t map[MAP_W][MAP_H] = {MAP_EMPTY};
 bool running = true;
+int curClickedDirection = LEFT;
 
 typedef struct{
   int x, y;
@@ -30,6 +31,23 @@ typedef struct{
 // snake and apple
 block_t apple;
 snake_t snake;
+
+bool isInsideSnake(block_t b, int start){
+  int i = start;
+  while(snake.body[i].active == true){
+    if(b.x == snake.body[i].x && b.y == snake.body[i].y) return true;
+    i++;
+  }
+
+  return false;
+}
+
+void newApple(){
+  do{
+    apple.x = rand() % MAP_W;
+    apple.y = rand() % MAP_H;
+  } while(isInsideSnake(apple, 0));
+}
 
 void init(){
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -51,11 +69,6 @@ void init(){
     // Rand time generation
     srand(time(NULL));
 
-    //init apple
-    apple.active = true;
-    apple.x = rand() % MAP_W;
-    apple.y = rand() % MAP_H;
-
     //init snake
     {
       int i = 0;
@@ -73,6 +86,11 @@ void init(){
         snake.body[i].y = -1;
       }
     }
+
+
+    //init apple
+    apple.active = true;
+    newApple();
 }
 
 void keydown(SDL_Event e){
@@ -88,19 +106,23 @@ void keyup(SDL_Event e){
     switch(e.key.keysym.sym){
         case SDLK_UP:
         case SDLK_w:
-            if(snake.direction != DOWN) snake.direction = UP;
+        case SDLK_k:
+            curClickedDirection = UP;
             break;
         case SDLK_RIGHT:
         case SDLK_d:
-            if(snake.direction != LEFT) snake.direction = RIGHT;
+        case SDLK_l:
+            curClickedDirection = RIGHT;
             break;
         case SDLK_DOWN:
         case SDLK_s:
-            if(snake.direction != UP) snake.direction = DOWN;
+        case SDLK_j:
+             curClickedDirection = DOWN;
             break;
         case SDLK_LEFT:
         case SDLK_a:
-            if(snake.direction != RIGHT) snake.direction = LEFT;
+        case SDLK_h:
+            curClickedDirection = LEFT;
             break;
     }
 }
@@ -158,6 +180,26 @@ void moveSnake(){
   }
 }
 
+bool isEatingApple(){
+  return apple.x == snake.body[0].x && apple.y == snake.body[0].y;
+}
+
+void sizeUpSnake(){
+  int s = snake.size++;
+  snake.body[s].x = snake.body[s-1].x;
+  snake.body[s].y = snake.body[s-1].y;
+  snake.body[s].active = true;
+}
+
+bool isSnakeOOB(){
+  return snake.body[0].x >= MAP_W || snake.body[0].x < 0 ||
+         snake.body[0].y >= MAP_H || snake.body[0].y < 0;
+}
+
+bool isSnakeCollided(){
+  return isInsideSnake(snake.body[0], 1);
+}
+
 void update(){
     uint32_t now = SDL_GetTicks();
     float deltaT = (now - last_time) / 1000.0f;
@@ -165,9 +207,45 @@ void update(){
     if(deltaT >= tick_time){
       last_time = now;
 
+      // CHANGE DIRECTION
+
+      switch(curClickedDirection){
+          case UP:
+              if(snake.direction != DOWN) snake.direction = UP;
+              break;
+          case RIGHT:
+              if(snake.direction != LEFT) snake.direction = RIGHT;
+              break;
+          case DOWN:
+              if(snake.direction != UP) snake.direction = DOWN;
+              break;
+          case LEFT:
+              if(snake.direction != RIGHT) snake.direction = LEFT;
+              break;
+      }
+
       // MOVE SNAKE
 
       moveSnake();
+
+      // CHECK FOR APPLE
+      
+      if(isEatingApple()){
+        newApple();
+        sizeUpSnake();
+      }
+
+      // CHECK FOR GAMEOVER
+
+      if(isSnakeOOB() || isSnakeCollided()){
+        running = false;
+      }
+
+      // CHECK FOR WIN
+
+      if(snake.size == MAX_SNAKE_SIZE){
+        running = false;
+      }
     }
 }
 
