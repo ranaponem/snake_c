@@ -1,14 +1,14 @@
-#include "colors.h"
 #include "constants.h"
-#include "snake.h"
+#include "render.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_render.h>
 #include <stdio.h>
 #include <time.h>
 
 // variable init
-float tick_time = 0.3;
+float tick_time = 0.1;
 uint32_t last_time = 0;
 SDL_Window* w;
 SDL_Renderer* r;
@@ -20,6 +20,8 @@ int curGameState = GAME_MENU;
 void init(){
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
         fprintf(stderr, "E: Couldn't initialize SDL\n");
+
+    IMG_Init(IMG_INIT_PNG);
 
     w = SDL_CreateWindow(
         TITLE,
@@ -169,71 +171,25 @@ void update(){
   }
 }
 
-void renderGameMenu(){
-  // TODO: 
-}
-
-void renderGamePlaying(){
-  
-  SDL_Rect renderRect;
-  renderRect.h = GRID_SIZE; renderRect.w = GRID_SIZE;
-
-  // RENDER GRID
-
-  int curColor;
-
-  for(int y = 0 ; y < MAP_H ; y++){
-    curColor = y % 2;
-
-    for(int x = 0 ; x < MAP_W ; x++){
-      if(curColor == 0){
-        SDL_SetRenderDrawColor(r, BKG_COLOR_1);
-        curColor = 1;
-      }
-      else{
-        SDL_SetRenderDrawColor(r, BKG_COLOR_2);
-        curColor = 0;
-      }
-
-      renderRect.x = x * GRID_SIZE;
-      renderRect.y = y * GRID_SIZE;
-
-      SDL_RenderFillRect(r, &renderRect);
-    }
-  }
-
-  // RENDER APPLE
-  // TODO: MAKE APPLE LOAD ITS SPRITE
-  
-  SDL_SetRenderDrawColor(r, 255, 0, 0, 255);
-  renderRect.x = apple.x * GRID_SIZE;
-  renderRect.y = apple.y * GRID_SIZE;
-  SDL_RenderFillRect(r, &renderRect);
-
-  // RENDER SNAKE
-  // TODO: MAKE SNAKE SEGMENTS LOAD SPRITES
-
-  for(int i = 0 ; i < snake.size ; i++){
-    SDL_SetRenderDrawColor(r, 0, 0, 255,255);
-    renderRect.x = snake.body[i].x * GRID_SIZE;
-    renderRect.y = snake.body[i].y * GRID_SIZE;
-    SDL_RenderFillRect(r, &renderRect);
-  }
-}
-
 void render(){
     SDL_SetRenderDrawColor(r, 0, 0, 0, 255);
     SDL_RenderClear(r);
 
     switch(curGameState){
       case GAME_MENU:
+        renderGameMenu(r);
         break;
       case GAME_PLAYING:
-        renderGamePlaying();
+        renderGamePlaying(r);
         break;
       case GAME_OVER:
+        renderGameOver(r);
         break;
       case GAME_PAUSED:
+        renderGamePaused(r);
+        break;
+      case GAME_WON:
+        renderGameWon(r);
         break;
     }
 
