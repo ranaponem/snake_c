@@ -1,4 +1,5 @@
 #include "render.h"
+#include "constants.h"
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 
@@ -54,7 +55,11 @@ void renderGamePlaying(SDL_Renderer *r){
   // RENDER SNAKE
   // TODO: MAKE SNAKE SEGMENTS LOAD SPRITES
 
+  SDL_SetRenderDrawColor(r, 0, 0, 0, 100);
   for(int i = 0 ; i < snake.size ; i++){
+    renderRect.x = (snake.body[i].x * GRID_SIZE) - 10;
+    renderRect.y = snake.body[i].y * GRID_SIZE + 10;
+    SDL_RenderFillRect(r, &renderRect);
     renderRect.x = snake.body[i].x * GRID_SIZE;
     renderRect.y = snake.body[i].y * GRID_SIZE;
     char *filepath = i == 0 ? "./sprites/snake_head.png" : "./sprites/snake_body.png";

@@ -35,7 +35,7 @@ void init(){
         fprintf(stderr, "E: Couldn't initialize SDL window\n");
 
     r = SDL_CreateRenderer(w, -1, 0);
-
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
     // Rand time generation
     srand(time(NULL));
 
